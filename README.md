@@ -8,18 +8,11 @@ An end-to-end intelligent computer vision and web application system that identi
 1. [Overview](#-overview)
 2. [Visual Tour & Screenshots](#-visual-tour--screenshots)
 3. [System Architecture](#-system-architecture)
-4. [Project Structure](#-project-structure)
-5. [Deep Dive into Components](#-deep-dive-into-components)
-   - [Frontend (React SPA)](#1-frontend-react-single-page-application)
-   - [Backend (Flask REST API)](#2-backend-flask-rest-api)
+4. [Deep Dive into Components](#-deep-dive-into-components)
    - [Scraping & Data Acquisition Pipeline](#3-scraping--data-acquisition-pipeline)
    - [Face Encoding Engine (CPU & GPU)](#4-face-encoding-engine-cpu--gpu)
    - [Analytics & Maintenance Tools](#5-analytics--maintenance-tools)
-6. [Data Schema & Storage Format](#-data-schema--storage-format)
-7. [Installation & Setup](#-installation--setup)
-8. [Running the Application](#-running-the-application)
-9. [API Specification](#-api-specification)
-10. [Troubleshooting & FAQ](#-troubleshooting--faq)
+5. [Data Schema & Storage Format](#-data-schema--storage-format)
 
 ---
 
@@ -103,110 +96,13 @@ graph TD
     Frontend -->|Render Animated Carousel & Info Cards| User
 ```
 
----
-
-## 📁 Project Structure
-
-```plaintext
-PFA/
-├── backend/
-│   └── server.py                   # Flask REST API server (port 8000)
-├── frontend/
-│   ├── public/                     # Static HTML template & favicons
-│   │   ├── favicon.ico
-│   │   ├── index.html
-│   │   └── manifest.json
-│   ├── src/
-│   │   ├── App.css                 # Custom styling for cards, carousel, spinner
-│   │   ├── App.js                  # Main React component (Uploader, Carousel, Cards)
-│   │   ├── App.test.js             # Unit testing suite
-│   │   ├── hollywoodBg.jpg         # Hero background graphic
-│   │   ├── index.css               # Global baseline stylesheet
-│   │   ├── index.js                # React DOM entry point
-│   │   └── reportWebVitals.js      # Core web vitals reporting
-│   ├── package.json                # Frontend dependencies & scripts
-│   ├── package-lock.json
-│   └── peter.jpg                   # Sample test portrait
-├── movies/                         # Directory junction to scrap/movies
-│   ├── 2021/                       # 177 movie folders
-│   ├── 2022/                       # 307 movie folders
-│   └── 2023/                       # 338 movie folders
-├── scrap/
-│   ├── celebrities/                # 8,000+ folders of downloaded celebrity photos
-│   ├── movies/                     # Scraped movie archive by year
-│   │   └── <year>/
-│   │       └── <Movie_Title>/
-│   │           ├── .complete       # Status flag indicating full ingestion
-│   │           ├── casts.json      # Mapping: Actor Name -> Character Name
-│   │           ├── cast_details.json# Detailed cast array with billing order
-│   │           ├── description.txt # Full movie synopsis / storyline
-│   │           ├── metadata.json   # IMDb ID, URL, runtime, genres
-│   │           └── photo.jpg       # Movie poster image
-│   ├── movie_scraper_pipeline.py   # Wikipedia + IMDb + Bing scraping pipeline
-│   ├── generate_faces.py           # CPU multi-threaded face encoding builder
-│   ├── generate_faces_gpu.py       # GPU batch-accelerated face encoding builder
-│   ├── most.py                     # Analytics script: rank actors with most movies
-│   ├── delete.py                   # Dataset cleaner: prune empty celebrity folders
-│   ├── faces.json                  # Vector database (16,706 celebrities, 38,860 encodings)
-│   ├── faces_gpu_cache.json        # Resumable cache for GPU face detection
-│   └── dlib_build.log              # Compilation log for dlib installation
-├── screenshots/                    # Application & dataset UI screenshots
-│   ├── Screenshot 2026-10-24 024008.png
-│   ├── Screenshot 2026-10-24 024019.png
-│   ├── Screenshot 2026-10-24 054936.png
-│   ├── Screenshot 2026-10-24 054949.png
-│   └── Screenshot 2026-10-24 054955.png
-└── README.md                       # Comprehensive project documentation
-```
 
 ---
 
 ## 🔍 Deep Dive into Components
 
-### 1. Frontend (React Single-Page Application)
-Located in [`frontend/`](file:///F:/PFA/frontend), the UI is built using React 18:
-- **`App.js`**: Contains three primary states:
-  - **Upload State (`Input`)**: Clean hero screen with `hollywoodBg.jpg`, supporting both drag-and-drop file upload and standard file selector.
-  - **Loading State (`Spinner`)**: Rotating animated spinner displaying feedback while facial encodings are calculated and compared against 16,700+ entries.
-  - **Result State (`CardPage`)**:
-    - Displays the user's uploaded portrait next to the recognized celebrity name.
-    - An animated horizontal carousel (`List` & `Card`) powered by CSS transforms (`translateX(-${currentCardIndex * 700}px)`).
-    - Each card displays the movie poster (decoded from base64), movie title, release year, actor's character name, and movie description.
-    - Navigation buttons (`-` and `+`) with counter display (e.g. `1/3`).
-  - **Error State (`ErrorPage`)**: Displays clear user guidance if multiple faces or no faces are detected, with a one-click reload button.
-- **`App.css`**: Provides styling with flexbox layouts, card shadows, transparent gradients, and responsive sizing.
 
----
-
-### 2. Backend (Flask REST API)
-Located in [`backend/server.py`](file:///F:/PFA/backend/server.py):
-- **CORS Support**: Configured via `flask_cors.CORS(app)` to accept cross-origin requests from the React development server on port 3000.
-- **Face Detection and Validation**:
-  - Loads the uploaded image using `face_recognition.load_image_file()`.
-  - Enforces strict single-face validation:
-    ```python
-    faces = face_recognition.face_encodings(img)
-    if len(faces) != 1:
-        return jsonify({"message": "image must have exactly one face"})
-    ```
-- **Embedding Comparison**:
-  - Compares the 128-dimensional embedding against all encodings in `faces.json` with a tolerance threshold of `0.5`:
-    ```python
-    result = face_recognition.compare_faces(faces, face, tolerance=0.5)
-    if True in result:
-        cname = name
-        break
-    ```
-- **Filmography Query**:
-  - Scans `../movies/{year}` across catalogs (2021–2023).
-  - Checks if `cname in data.keys()` inside `casts.json`.
-  - Reads movie poster `photo.jpg` and base64 encodes it into an ASCII string.
-  - Reads `description.txt`.
-  - Packages and returns `[celebrity_name, movies_list]`.
-
----
-
-### 3. Scraping & Data Acquisition Pipeline
+### 1. Scraping & Data Acquisition Pipeline
 Located in [`scrap/movie_scraper_pipeline.py`](file:///F:/PFA/scrap/movie_scraper_pipeline.py):
 - **Wikipedia Movie Harvesting**:
   - Scrapes `https://en.wikipedia.org/wiki/List_of_American_films_of_{year}`.
@@ -227,7 +123,7 @@ Located in [`scrap/movie_scraper_pipeline.py`](file:///F:/PFA/scrap/movie_scrape
 
 ---
 
-### 4. Face Encoding Engine (CPU & GPU)
+### 2. Face Encoding Engine (CPU & GPU)
 
 #### A. CPU Multi-Threaded Generator (`scrap/generate_faces.py`)
 - Traverses `celebrities/` and detects faces using HOG (Histogram of Oriented Gradients) or CNN models.
@@ -243,7 +139,7 @@ Located in [`scrap/movie_scraper_pipeline.py`](file:///F:/PFA/scrap/movie_scrape
 
 ---
 
-### 5. Analytics & Maintenance Tools
+### 3. Analytics & Maintenance Tools
 
 #### A. Filmography Ranking (`scrap/most.py`)
 - Analyzes all movie folders in `movies/` across all years.
