@@ -53,7 +53,7 @@ Browsing further displays the 2023 comedy film **Bottoms**, where the actor also
 ---
 
 ### 4. Celebrity Reference Dataset
-The automated image scraper collects high-quality portrait datasets for every actor. The directory contains over **8,045+ individual celebrity folders**:
+The automated image scraper collects high-quality portrait datasets for every actor. The directory contains over **33,045+ individual celebrity folders**:
 
 ![Celebrity Dataset Directory](screenshots/Screenshot%202026-10-24%20024008.png)
 
